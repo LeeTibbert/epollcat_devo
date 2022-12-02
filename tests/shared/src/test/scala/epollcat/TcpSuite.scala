@@ -171,6 +171,20 @@ class TcpSuite extends EpollcatSuite {
     }
   }
 
+  // epollcat Issue #63
+  test("bind to null (localhost), then connect") {
+    IOServerSocketChannel
+      .open
+      .evalTap(_.setOption(StandardSocketOptions.SO_REUSEADDR, java.lang.Boolean.TRUE))
+      // "null" will bind to "localhost", IPv6 or IPv4 depending on system configuration
+      .evalTap(_.bind(null))
+      .use { server =>
+        IOSocketChannel.open.use { clientCh =>
+          server.localAddress.flatMap(clientCh.connect(_))
+        }
+      }
+  }
+
   test("ConnectException") {
     IOServerSocketChannel
       .open

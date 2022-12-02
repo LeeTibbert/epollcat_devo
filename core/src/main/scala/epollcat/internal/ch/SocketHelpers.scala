@@ -273,14 +273,22 @@ private[ch] object SocketHelpers {
       hints.ai_flags = posix.netdb.AI_NUMERICHOST | posix.netdb.AI_NUMERICSERV
       if (!useIPv4Stack) hints.ai_flags |= posix.netdb.AI_V4MAPPED
       hints.ai_socktype = posix.sys.socket.SOCK_STREAM
+
+      val (node, port) =
+        if (addr == null) (null, "0") // use "localhost"
+        else {
+          (toCString(addr.getAddress().getHostAddress()), addr.getPort().toString())
+        }
+
       val rtn = posix
         .netdb
         .getaddrinfo(
-          toCString(addr.getAddress().getHostAddress()),
-          toCString(addr.getPort.toString),
+          node,
+          toCString(port),
           hints,
           addrinfo
         )
+
       if (rtn == 0) {
         Right(!addrinfo)
       } else {
